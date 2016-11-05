@@ -1,0 +1,7 @@
+roles/basho-labs.riak-kv/*
+inventory/*
+downloaded/*
+.vagrant/*
+ssh-config.d/*
+ssh-config
+*.retry

@@ -1,0 +1,19 @@
+- command: screen -dm
+- local_action: file path=ssh-config.d state=directory
+  become: false
+  run_once: true
+- local_action: shell vagrant ssh-config {{ inventory_hostname }} > ./ssh-config.d/{{ inventory_hostname }}.config
+  become: false
+- local_action: shell cat ./ssh-config.d/*.config > ssh-config
+  become: false
+  run_once: true
+- local_action: file path=inventory state=directory
+  become: false
+  run_once: true
+- local_action: template src=inventory.j2 dest=inventory/hosts
+  become: false
+  run_once: true
+
+#- lineinfile: dest=/etc/hosts regexp='^{{hostvars[item]["ansible_eth1"]["ipv4"]["address"] | replace(".", "\.") }}.*{{ item }}$' line="{{ hostvars[item]['ansible_eth1']['ipv4']['address'] }} {{hostvars[item]['ansible_fqdn']}} {{item}}"
+#  with_items: '{{ ansible_play_hosts }}'
+- template: src=hosts.j2 dest=/etc/hosts

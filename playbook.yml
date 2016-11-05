@@ -1,0 +1,88 @@
+- hosts: all
+  become: true
+  become_user: root
+  vars:
+  # defaults commented
+    # riak_package:       riak
+    # riak_enterprise:    false
+    # riak_admin:   '/usr/sbin/riak-admin'
+    # riak_conf_template: riak.conf.j2
+    # riak_node_name:     'riak@{{ ansible_fqdn }}'
+    # riak_pb_bind_ip:    0.0.0.0
+    # riak_pb_port:       8087
+    # riak_http_bind_ip:  0.0.0.0
+    # riak_http_port:     8098
+    # riak_https_bind_ip: 0.0.0.0
+    # riak_https_port:    10011
+    # riak_ring_size:     64
+    # riak_backend:       bitcask
+    # riak_control:       'off'
+    # riak_search:        'off'
+    # riak_leveldb_max_mem_percent:   70
+    # riak_net_speed:     1Gb
+    # riak_anti_entropy: active
+    # riak_security_enabled: false
+    #### riak_shell configuration
+    # riak_shell_group: 'riak'
+    # riak_shell_interface: 'ansible_eth0'
+    # riak_shell_conf_template: riak_shell.config.j2
+    # riak_shell_nodes_list: "{% for host in groups[riak_shell_group] %}riak@{{ hostvars[host][riak_shell_interface]['ipv4']['address'] }} {% endfor %}"
+    # riak_shell_nodes: "{{ riak_shell_nodes_list.split() }}"
+    #### disc tuning
+    # riak_filesystem:    ext4
+    # riak_mountpoint:    /
+    # riak_mount_options: noatime,barrier=0,errors=remount-ro
+    # riak_partition:     /dev/mapper/VolGroup-lv_root
+    riak_partition: /dev/sda1
+    # riak_physical_disks:
+    #   - sda
+    #### options
+    # riak_tune_disks:    false
+    riak_tune_disks:    true
+    # riak_tune_os:       false
+    riak_tune_os:    true
+    # riak_scheduler:     noop
+    ## Options below are commented out by default
+    #### Create bucket types
+    ##riak_bucket_types:
+    ## - { name: counters, props: '{"props":{"datatype":"counter"}}' }
+    ##  - { name: maps, props: '{"props":{"datatype":"map"}}' }
+    ##  - { name: sets, props: '{"props":{"datatype":"set"}}' }
+    #### Create groups
+    ##riak_groups:
+    ##  - admins
+    ##  - keysusers
+    #### Create users
+    ##riak_users:
+    ##  - {user: 'user1', password: '', cert: ''}
+    ##  - {user: 'user2', password: 'changeme', cert: ''}
+    #### Create security sources
+    ##riak_sources:
+    ##  - {user: 'user1', type: 'certificate', cidr: '0.0.0.0/0'}
+    ##  - {user: 'user2', type: 'password', cidr: '0.0.0.0/0'}
+    ##  - {user: 'user3', type: 'trust', cidr: '0.0.0.0/0'}
+    ##  - {user: 'user4', type: 'pam', cidr: '0.0.0.0/0'}
+    #### Create permission grants
+    ##riak_grants:
+    ##  - {subject: 'all', scope: 'any', permissions: ''}
+    ##  - {subject: 'user', scope: 'mybuckettype', permissions: ''}
+    ##  - {subject: 'group', scope: 'mybuckettype mybucket', permissions: ''}
+
+  roles:
+    - { role: common }
+    - { role: basho-labs.riak-kv }
+  tasks:
+  - riak: command=join target_node="riak@{{ hostvars[ansible_play_hosts[0]]['ansible_fqdn'] }}"
+    when: inventory_hostname != ansible_play_hosts[0]
+  - riak: command=plan
+    run_once: true
+  - riak: command=commit
+    run_once: true
+
+- hosts: '{{ ansible_play_hosts[0] }}'
+  become: true
+  vars:
+    riak_node_name: riak@{{ ansible_fqdn }}
+    download_dir: /vagrant/downloaded
+  roles:
+    - { role: riak-explorer }

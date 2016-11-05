@@ -1,0 +1,17 @@
+- name: Creating Directory for Downlaods
+  file: path="{{ download_dir }}" state=directory
+- name: Downloading Riak Explorer Ubuntu Release
+  get_url: dest="{{ download_dir }}" url={{ releases_url }}/{{ ubuntu_file }}
+- name: "Extracting Riak Explorer"
+  command: chdir=/var/lib tar xzf {{ download_dir }}/{{ ubuntu_file }} creates=riak_explorer
+- name: Configuring Riak Explorer [Riak Node]
+  lineinfile: dest=/var/lib/riak_explorer/etc/riak_explorer.conf regexp="^clusters.default.riak_node =" line="clusters.default.riak_node = {{ riak_node_name }}"
+- name: Configuring Riak Explorer [Listen Address]
+  lineinfile: dest=/var/lib/riak_explorer/etc/riak_explorer.conf regexp="^listener =" line="listener = 0.0.0.0:9000"
+- name: Pinging Riak Explorer
+  command: chdir=/var/lib/riak_explorer bin/riak_explorer ping
+  register: rex_ping
+  ignore_errors: true
+- name: Starting Riak Explorer
+  command: chdir=/var/lib/riak_explorer bin/riak_explorer start
+  when: rex_ping.rc != 0

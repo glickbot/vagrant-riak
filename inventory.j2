@@ -1,0 +1,4 @@
+[all]
+{% for host in ansible_play_hosts %}
+{{host}}
+{% endfor %}
