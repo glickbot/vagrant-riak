@@ -17,6 +17,8 @@ Vagrant.configure(2) do |config|
       # when all the machines are up and ready.
       if machine_id == 1
         machine.vm.network "forwarded_port", guest: 9000, host: 9000
+	machine.vm.network "forwarded_port", guest: 8098, host: 8098
+	machine.vm.network "forwarded_port", guest: 8087, host: 8087
       end
       if machine_id == N
         machine.vm.provision :ansible do |ansible|
